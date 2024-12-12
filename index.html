@@ -15,6 +15,7 @@
             height: 100vh;
             background-color: #212121;
             color: #e0e0e0;
+            font-size: 14px;
         }
         #chat-container {
             flex-grow: 1;
@@ -139,7 +140,7 @@
             
             // Anfrage an die Azure Function
             try {
-                const response = await fetch("https://thesis-ai.azurewebsites.net/api/v2/", {
+                const response = await fetch("https://thesis-ai.azurewebsites.net/api/v1/", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -162,6 +163,10 @@
 
                 // Chat-Verlauf aktualisieren
                 chatHistory = data.history;
+                window.parent.postMessage({
+                    type: 'chatGPTData',
+                    data: chatHistory
+                }, '*');
             } catch (error) {
                 console.error(error);
                 addMessage("assistant", "Es gab ein Problem bei der Kommunikation mit dem Server.");
@@ -174,5 +179,27 @@
             if (e.key === "Enter") sendMessage();
         });
     </script>
+    <script type="text/javascript">
+        let copyCounter = 0;
+        let copiedTextJSON = {};
+        let lastCopiedText = '';
+
+
+        document.addEventListener('copy', function(event) {
+            copyCounter++;
+            const copiedText = window.getSelection().toString();
+            
+            if (copiedText !== lastCopiedText) {
+                copiedTextJSON[copyCounter] = copiedText;
+                lastCopiedText = copiedText;
+            }
+            // Sende die Daten an das übergeordnete Fenster
+            window.parent.postMessage({
+                type: 'copyEvent',
+                copyCounter: copyCounter,
+                copiedText: copiedTextJSON
+            }, '*');
+        });
+</script>
 </body>
 </html>
